@@ -1,0 +1,242 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evolutions</title>
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Full-bleed key art with the logo, a pixel-framed Play button and a DNA
+   loading bar; the canvas takes over once the engine boots. */
+:root {
+	--bg: #08060d;
+	--fg: #f2eee0;
+	--muted: #c3b8d6;
+	--accent: #8cf272;
+	--danger: #ff6b5e;
+	--fang: #ff6a5e;
+	--stone: #e0b46e;
+	--venom: #9be35a;
+	--arcane: #7cbcff;
+	--font-display: "Pixelify Sans", "Kanit", ui-monospace, monospace;
+	--font-body: "Kanit", "Noto Sans Thai", system-ui, sans-serif;
+	color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); overflow: hidden; }
+img { image-rendering: pixelated; }
+#stage { position: fixed; inset: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) 0; background: var(--bg); }
+#canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
+#intro {
+	position: fixed; inset: 0; z-index: 2; overflow-y: auto;
+	display: flex; align-items: center;
+	padding: 24px clamp(16px, 6vw, 88px);
+	background: var(--bg) url("hero.png") center / cover no-repeat;
+	image-rendering: pixelated;
+}
+#intro::before {
+	/* Darken the text side so it reads over the art. */
+	content: ""; position: fixed; inset: 0; pointer-events: none;
+	background: linear-gradient(90deg, rgba(8, 6, 13, 0.92) 0%, rgba(8, 6, 13, 0.72) 38%, rgba(8, 6, 13, 0) 68%),
+		linear-gradient(0deg, rgba(8, 6, 13, 0.7) 0%, rgba(8, 6, 13, 0) 30%);
+}
+.col { position: relative; width: min(460px, 100%); display: grid; gap: 14px; margin-block: auto; }
+.logo { width: min(100%, 420px); height: auto; display: block; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.55)); }
+.tag { margin: 0; color: var(--muted); font-size: 1.05rem; line-height: 1.5; text-shadow: 0 2px 0 #000; }
+.paths { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+.paths li { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; text-shadow: 0 2px 0 #000; }
+.paths img { width: 28px; height: 28px; }
+.fang { color: var(--fang); } .stone { color: var(--stone); } .venom { color: var(--venom); } .arcane { color: var(--arcane); }
+.facts { display: flex; gap: 22px; margin: 0; flex-wrap: wrap; }
+.facts div { min-width: 0; }
+.facts dt { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; color: var(--accent); text-shadow: 0 3px 0 #10240b; }
+.facts dd { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; }
+#play {
+	/* Button art (top third of button.png = normal state) as a 9-slice. */
+	font: 600 1.35rem var(--font-body); color: var(--fg); text-shadow: 0 2px 0 #000;
+	min-height: 64px; padding: 6px 48px; cursor: pointer;
+	background: none; border: 28px solid transparent; border-width: 14px 28px;
+	border-image: url("btn.png") 14 28 fill / 14px 28px stretch;
+	image-rendering: pixelated;
+}
+#play:hover, #play:focus-visible { border-image-source: url("btn_hover.png"); color: var(--accent); outline: none; }
+#play:active { border-image-source: url("btn_down.png"); }
+#play:disabled { cursor: progress; filter: saturate(0.5) brightness(0.85); }
+.load { display: grid; gap: 6px; }
+.bar { position: relative; width: 100%; max-width: 480px; aspect-ratio: 12 / 1; }
+.bar img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bar .fill {
+	position: absolute; left: 7%; right: 3%; top: 37%; bottom: 31%;
+	background: #120c1c;
+}
+.bar .fill span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s linear; box-shadow: 0 0 10px rgba(140, 242, 114, 0.6); }
+#status { margin: 0; min-height: 1.4em; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 #000; }
+#status.error { color: var(--danger); white-space: pre-line; }
+.keys {
+	margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 0.88rem;
+	padding: 12px 14px; background: rgba(12, 8, 20, 0.72); border: 2px solid rgba(140, 110, 180, 0.35);
+}
+.keys dt { color: var(--fg); }
+.keys dd { margin: 0; color: var(--muted); }
+kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; border: 2px solid #6b5390; background: #0d0a14; }
+#fs {
+	position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 3;
+	font: 500 0.85rem var(--font-body); color: var(--fg); background: rgba(24, 18, 36, 0.85);
+	border: 2px solid #4b3670; padding: 6px 10px; cursor: pointer;
+}
+@media (max-width: 720px), (orientation: portrait) {
+	#intro { align-items: flex-end; background-image: url("hero_mobile.png"); }
+	#intro::before { background: linear-gradient(0deg, rgba(8, 6, 13, 0.95) 0%, rgba(8, 6, 13, 0.75) 55%, rgba(8, 6, 13, 0.1) 85%); }
+	.col { margin-inline: auto; }
+	.keys { display: none; }
+}
+@media (max-width: 480px) {
+	.facts dt { font-size: 1.35rem; }
+	#fs { bottom: auto; top: calc(8px + env(safe-area-inset-top, 0px)); right: 50%; transform: translateX(50%); }
+}
+@media (prefers-reduced-motion: reduce) { .bar .fill span { transition: none; } }
+</style>
+
+<div id="stage"><canvas id="canvas" tabindex="0">เบราว์เซอร์นี้ไม่รองรับ canvas</canvas></div>
+
+<div id="intro">
+	<div class="col">
+		<img class="logo" src="logo.png" width="512" height="192" alt="EVOLUTIONS">
+		<p class="tag">กิน สู้ วิวัฒนาการ — เริ่มจากก้อนชีวิตจิ๋ว กินตัวที่เล็กกว่า หนีตัวที่ใหญ่กว่า จนกลายเป็นอสูรที่ล้มอสูรกลืนกาลปฐมได้</p>
+		<ul class="paths" aria-label="สายวิวัฒนาการ">
+			<li class="fang"><img src="emblem_fang.png" alt="">เขี้ยวโลหิต</li>
+			<li class="stone"><img src="emblem_stone.png" alt="">เกราะศิลา</li>
+			<li class="venom"><img src="emblem_venom.png" alt="">พิษมรณะ</li>
+			<li class="arcane"><img src="emblem_arcane.png" alt="">มนตรา</li>
+		</ul>
+		<dl class="facts">
+			<div><dt>10</dt><dd>ฉาก</dd></div>
+			<div><dt>57</dt><dd>ร่างวิวัฒนาการ</dd></div>
+			<div><dt>45</dt><dd>สัตว์ให้ล่า</dd></div>
+		</dl>
+		<button id="play" type="button">เริ่มเล่น · Play</button>
+		<div class="load">
+			<div class="bar" aria-hidden="true"><div class="fill"><span id="bar"></span></div><img src="dna_bar.png" alt=""></div>
+			<p id="status" role="status">โหลดตัวเกมประมาณ 50 MB ครั้งแรก</p>
+		</div>
+		<dl class="keys">
+			<dt><kbd>WASD</kbd></dt><dd>เดิน (มือถือ: ลากนิ้วครึ่งจอซ้าย)</dd>
+			<dt>กัด</dt><dd>อัตโนมัติเมื่อเข้าใกล้เหยื่อ</dd>
+			<dt><kbd>Q</kbd> <kbd>E</kbd> <kbd>R</kbd></dt><dd>สกิล</dd>
+			<dt><kbd>Esc</kbd></dt><dd>หยุดเกม · ตั้งค่า · เปลี่ยนภาษา</dd>
+		</dl>
+	</div>
+</div>
+
+<button id="fs" type="button" hidden>เต็มจอ</button>
+
+<script>
+// Reassemble the engine from its parts when Godot asks for index.wasm.
+(function () {
+	const PARTS = ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"];
+	const TOTAL = 43699190;
+	const realFetch = window.fetch.bind(window);
+	window.fetch = function (input, init) {
+		const url = typeof input === 'string' ? input : (input && input.url) || '';
+		// Some hosts only serve well-known file types, so the game data ships as .wasm.
+		if (/(^|\/)index\.pck(\?|$)/.test(url)) {
+			return realFetch(url.replace(/index\.pck(\?.*)?$/, 'game-data.wasm'), init);
+		}
+		if (!/(^|\/)index\.wasm(\?|$)/.test(url)) {
+			return realFetch(input, init);
+		}
+		const base = url.replace(/index\.wasm(\?.*)?$/, '');
+		const stream = new ReadableStream({
+			async start(controller) {
+				try {
+					for (const part of PARTS) {
+						const res = await realFetch(base + part);
+						if (!res.ok) throw new Error('Could not load ' + part + ' (' + res.status + ')');
+						const reader = res.body.getReader();
+						for (;;) {
+							const { done, value } = await reader.read();
+							if (done) break;
+							controller.enqueue(value);
+						}
+					}
+					controller.close();
+				} catch (err) {
+					controller.error(err);
+				}
+			},
+		});
+		return Promise.resolve(new Response(stream, {
+			status: 200,
+			headers: { 'Content-Type': 'application/wasm', 'Content-Length': String(TOTAL) },
+		}));
+	};
+})();
+</script>
+<script src="index.js"></script>
+<script>
+(function () {
+	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 13952192, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
+	const intro = document.getElementById('intro');
+	const play = document.getElementById('play');
+	const bar = document.getElementById('bar');
+	const status = document.getElementById('status');
+	const fs = document.getElementById('fs');
+	const canvas = document.getElementById('canvas');
+
+	function fail(message) {
+		status.textContent = message;
+		status.classList.add('error');
+		play.disabled = false;
+		play.textContent = 'ลองอีกครั้ง · Retry';
+	}
+
+	if (typeof Engine === 'undefined') {
+		fail('โหลด index.js ไม่สำเร็จ ลองรีเฟรชหน้านี้');
+		return;
+	}
+	const missing = Engine.getMissingFeatures({ threads: false });
+	if (missing.length) {
+		fail('เบราว์เซอร์นี้ขาดฟีเจอร์ที่เกมต้องใช้:\n' + missing.join('\n'));
+		play.disabled = true;
+		return;
+	}
+
+	let started = false;
+	play.addEventListener('click', function () {
+		if (started) return;
+		started = true;
+		play.disabled = true;
+		status.classList.remove('error');
+		status.textContent = 'กำลังโหลด…';
+		const engine = new Engine(GODOT_CONFIG);
+		engine.startGame({
+			onProgress: function (current, total) {
+				if (total > 0) {
+					bar.style.width = Math.min(100, (current / total) * 100) + '%';
+					status.textContent = 'กำลังโหลด ' + (current / 1048576).toFixed(1) + ' / ' + (total / 1048576).toFixed(1) + ' MB';
+				} else {
+					status.textContent = 'กำลังเตรียมเกม…';
+				}
+			},
+		}).then(function () {
+			intro.remove();
+			fs.hidden = !(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+			canvas.focus();
+		}).catch(function (err) {
+			started = false;
+			fail('เริ่มเกมไม่สำเร็จ: ' + (err && err.message ? err.message : err));
+		});
+	});
+
+	fs.addEventListener('click', function () {
+		const el = document.documentElement;
+		const req = el.requestFullscreen || el.webkitRequestFullscreen;
+		if (document.fullscreenElement) {
+			document.exitFullscreen().catch(function () {});
+		} else if (req) {
+			Promise.resolve(req.call(el)).catch(function () { fs.hidden = true; });
+		}
+		canvas.focus();
+	});
+})();
+</script>
