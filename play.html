@@ -141,7 +141,7 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 (function () {
 	const FILES = {
 		wasm: { parts: ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"], total: 43699190, type: 'application/wasm' },
-		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm"], total: 15193440, type: 'application/octet-stream' },
+		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm"], total: 15193408, type: 'application/octet-stream' },
 	};
 	const realFetch = window.fetch.bind(window);
 	window.fetch = function (input, init) {
@@ -185,7 +185,7 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 <script src="index.js"></script>
 <script>
 (function () {
-	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 15193440, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
+	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 15193408, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
 	const intro = document.getElementById('intro');
 	const play = document.getElementById('play');
 	const bar = document.getElementById('bar');
