@@ -79,11 +79,6 @@ img { image-rendering: pixelated; }
 .keys dt { color: var(--fg); }
 .keys dd { margin: 0; color: var(--muted); }
 kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; border: 2px solid #6b5390; background: #0d0a14; }
-#fs {
-	position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 3;
-	font: 500 0.85rem var(--font-body); color: var(--fg); background: rgba(24, 18, 36, 0.85);
-	border: 2px solid #4b3670; padding: 6px 10px; cursor: pointer;
-}
 @media (max-width: 720px), (orientation: portrait) {
 	/* Logo over the sky, monsters left visible mid-screen, text over the water. */
 	#intro { align-items: stretch; background-image: url("hero_mobile.png"); background-position: center bottom; }
@@ -98,7 +93,6 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 @media (max-width: 480px) {
 	.facts dt { font-size: 1.35rem; }
 	.tag { display: none; }
-	#fs { bottom: auto; top: calc(8px + env(safe-area-inset-top, 0px)); right: 50%; transform: translateX(50%); }
 }
 @media (prefers-reduced-motion: reduce) { .bar .fill span { transition: none; } }
 </style>
@@ -134,14 +128,13 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 	</div>
 </div>
 
-<button id="fs" type="button" hidden>เต็มจอ</button>
 
 <script>
 // Reassemble the engine from its parts when Godot asks for index.wasm.
 (function () {
 	const FILES = {
 		wasm: { parts: ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"], total: 43699190, type: 'application/wasm' },
-		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm", "game-data-2.wasm", "game-data-3.wasm"], total: 40705456, type: 'application/octet-stream' },
+		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm", "game-data-2.wasm", "game-data-3.wasm"], total: 40705728, type: 'application/octet-stream' },
 	};
 	const realFetch = window.fetch.bind(window);
 	window.fetch = function (input, init) {
@@ -185,12 +178,11 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 <script src="index.js"></script>
 <script>
 (function () {
-	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 40705456, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
+	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 40705728, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
 	const intro = document.getElementById('intro');
 	const play = document.getElementById('play');
 	const bar = document.getElementById('bar');
 	const status = document.getElementById('status');
-	const fs = document.getElementById('fs');
 	const canvas = document.getElementById('canvas');
 
 	function fail(message) {
@@ -230,7 +222,6 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 			},
 		}).then(function () {
 			intro.remove();
-			fs.hidden = !(document.fullscreenEnabled || document.webkitFullscreenEnabled);
 			canvas.focus();
 		}).catch(function (err) {
 			started = false;
@@ -238,15 +229,5 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 		});
 	});
 
-	fs.addEventListener('click', function () {
-		const el = document.documentElement;
-		const req = el.requestFullscreen || el.webkitRequestFullscreen;
-		if (document.fullscreenElement) {
-			document.exitFullscreen().catch(function () {});
-		} else if (req) {
-			Promise.resolve(req.call(el)).catch(function () { fs.hidden = true; });
-		}
-		canvas.focus();
-	});
 })();
 </script>
