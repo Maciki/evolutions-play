@@ -133,19 +133,23 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 <script>
 // Reassemble the engine from its parts when Godot asks for index.wasm.
 (function () {
-	const PARTS = ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"];
-	const TOTAL = 43699190;
+	const FILES = {
+		wasm: { parts: ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"], total: 43699190, type: 'application/wasm' },
+		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm"], total: 14721776, type: 'application/octet-stream' },
+	};
 	const realFetch = window.fetch.bind(window);
 	window.fetch = function (input, init) {
 		const url = typeof input === 'string' ? input : (input && input.url) || '';
-		// Some hosts only serve well-known file types, so the game data ships as .wasm.
-		if (/(^|\/)index\.pck(\?|$)/.test(url)) {
-			return realFetch(url.replace(/index\.pck(\?.*)?$/, 'game-data.wasm'), init);
-		}
-		if (!/(^|\/)index\.wasm(\?|$)/.test(url)) {
+		// Engine and game data ship in parts under 15 MB (and as .wasm, which
+		// every host serves); join them back into one stream.
+		const m = url.match(/(^|\/)index\.(wasm|pck)(\?.*)?$/);
+		if (!m) {
 			return realFetch(input, init);
 		}
-		const base = url.replace(/index\.wasm(\?.*)?$/, '');
+		const PARTS = FILES[m[2]].parts;
+		const TOTAL = FILES[m[2]].total;
+		const TYPE = FILES[m[2]].type;
+		const base = url.replace(/index\.(wasm|pck)(\?.*)?$/, '');
 		const stream = new ReadableStream({
 			async start(controller) {
 				try {
@@ -167,7 +171,7 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 		});
 		return Promise.resolve(new Response(stream, {
 			status: 200,
-			headers: { 'Content-Type': 'application/wasm', 'Content-Length': String(TOTAL) },
+			headers: { 'Content-Type': TYPE, 'Content-Length': String(TOTAL) },
 		}));
 	};
 })();
