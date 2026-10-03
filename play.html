@@ -85,13 +85,19 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 	border: 2px solid #4b3670; padding: 6px 10px; cursor: pointer;
 }
 @media (max-width: 720px), (orientation: portrait) {
-	#intro { align-items: flex-end; background-image: url("hero_mobile.png"); }
-	#intro::before { background: linear-gradient(0deg, rgba(8, 6, 13, 0.95) 0%, rgba(8, 6, 13, 0.75) 55%, rgba(8, 6, 13, 0.1) 85%); }
-	.col { margin-inline: auto; }
-	.keys { display: none; }
+	/* Logo over the sky, monsters left visible mid-screen, text over the water. */
+	#intro { align-items: stretch; background-image: url("hero_mobile.png"); background-position: center bottom; }
+	#intro::before { background: linear-gradient(0deg, rgba(8, 6, 13, 0.94) 0%, rgba(8, 6, 13, 0.78) 26%, rgba(8, 6, 13, 0) 44%),
+		linear-gradient(180deg, rgba(8, 6, 13, 0.55) 0%, rgba(8, 6, 13, 0) 22%); }
+	.col { margin-inline: auto; display: flex; flex-direction: column; min-height: 100%; margin-block: 0; }
+	.logo { margin-inline: auto; margin-bottom: auto; }
+	.tag { font-size: 0.95rem; text-align: center; }
+	.paths { justify-content: center; }
+	.facts, .keys { display: none; }
 }
 @media (max-width: 480px) {
 	.facts dt { font-size: 1.35rem; }
+	.tag { display: none; }
 	#fs { bottom: auto; top: calc(8px + env(safe-area-inset-top, 0px)); right: 50%; transform: translateX(50%); }
 }
 @media (prefers-reduced-motion: reduce) { .bar .fill span { transition: none; } }
@@ -135,7 +141,7 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 (function () {
 	const FILES = {
 		wasm: { parts: ["engine-0.wasm", "engine-1.wasm", "engine-2.wasm", "engine-3.wasm", "engine-4.wasm"], total: 43699190, type: 'application/wasm' },
-		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm"], total: 14721776, type: 'application/octet-stream' },
+		pck: { parts: ["game-data-0.wasm", "game-data-1.wasm"], total: 14723856, type: 'application/octet-stream' },
 	};
 	const realFetch = window.fetch.bind(window);
 	window.fetch = function (input, init) {
@@ -179,7 +185,7 @@ kbd { font-family: var(--font-display); font-size: 0.85em; padding: 0 5px; borde
 <script src="index.js"></script>
 <script>
 (function () {
-	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 14721776, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
+	const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 14723856, "index.wasm": 43699190}, "focusCanvas": true, "gdextensionLibs": []};
 	const intro = document.getElementById('intro');
 	const play = document.getElementById('play');
 	const bar = document.getElementById('bar');
